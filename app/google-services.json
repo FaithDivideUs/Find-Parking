@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "126651782408",
+    "firebase_url": "https://findparking-d9386.firebaseio.com",
+    "project_id": "findparking-d9386",
+    "storage_bucket": "findparking-d9386.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:126651782408:android:c69087d3ca12ad81",
+        "android_client_info": {
+          "package_name": "com.example.findparking"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "126651782408-6689v8mcgn8p3c1ts8najalrckecbr8p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyANiSqB9CL0LaiRH7tX9nhRoaUTyuaMOLg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "126651782408-6689v8mcgn8p3c1ts8najalrckecbr8p.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
