@@ -7,6 +7,7 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -22,6 +23,11 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -41,11 +47,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         l.setBackgroundColor(0x00000000);
 
         firebaseAuth = FirebaseAuth.getInstance();
-
+        DatabaseReference postRef = FirebaseDatabase.getInstance().getReference();
         if(firebaseAuth.getCurrentUser() != null){ // user already logged in
-            // profile activity
-            finish();
-            startActivity(new Intent(getApplicationContext(), ProfileActivity.class));
+            // if profile is ready goto SearchActivity
+            DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference();
+            rootRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot snapshot) {
+                    if (snapshot.hasChild(firebaseAuth.getCurrentUser().getUid())) {
+                        finish();
+                        startActivity(new Intent(getApplicationContext(), SearchActivity.class));
+                    }else{ // otherwise goto ProfileActivity to apply the form
+                        finish();
+                        startActivity(new Intent(getApplicationContext(), ProfileActivity.class));
+                    }
+
+                }
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+                    //todo
+                }
+            });
 
         }
 

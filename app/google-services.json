@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "126651782408-9cgpijsimjgtcb1ondgob2vpm6nr5v7e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.findparking",
+            "certificate_hash": "84ea95bd068abfac11ab3f4a7c4bf5063c4e321a"
+          }
+        },
+        {
           "client_id": "126651782408-6689v8mcgn8p3c1ts8najalrckecbr8p.apps.googleusercontent.com",
           "client_type": 3
         }
