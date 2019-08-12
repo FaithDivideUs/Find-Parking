@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <item android:id="@+id/option0"
+        android:title="@string/arxikh"/>
+    <item android:id="@+id/option1"
+        android:title="@string/aposundesi" />
+    <item
+        android:id="@+id/action_prof"
+        android:icon="@drawable/baseline_how_to_reg_black_18dp"
+        android:title="@string/login"
+        app:showAsAction="always" />
+
+
+</menu>

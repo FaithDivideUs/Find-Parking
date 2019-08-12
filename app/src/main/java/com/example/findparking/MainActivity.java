@@ -7,9 +7,13 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -24,14 +28,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button buttonRegister;
     private EditText editTextEmail;
     private EditText editTextPassword;
-    private TextView textViewSignin;
+    private Button buttonSignIn;
     private ProgressBar progressBar;
     private FirebaseAuth firebaseAuth;
+    MenuInflater inflater;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        LinearLayout l = findViewById(R.id.linearActivityMain);
+        l.setBackgroundColor(0x00000000);
 
         firebaseAuth = FirebaseAuth.getInstance();
 
@@ -43,13 +50,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         progressBar = new ProgressBar(this);
-        buttonRegister = (Button) findViewById(R.id.buttonRegister);
+        buttonRegister = (Button) findViewById(R.id.button1);
         editTextEmail = (EditText) findViewById(R.id.editTextEmail);
         editTextPassword = (EditText) findViewById(R.id.editTextPassword);
-        textViewSignin = (TextView) findViewById(R.id.textViewSingin);
+        buttonSignIn = (Button) findViewById(R.id.buttonSignIn);
 
         buttonRegister.setOnClickListener(this);
-        textViewSignin.setOnClickListener(this);
+        buttonSignIn.setOnClickListener(this);
     }
 
     private void registerUser(){
@@ -69,7 +76,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
         // if validations are ok
-        progressBar.isShown();
+
 
         firebaseAuth.createUserWithEmailAndPassword(email,password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -92,9 +99,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if(view == buttonRegister){
             registerUser();
         }
-        if(view == textViewSignin){
+        if(view == buttonSignIn){
             // will open login activity
             startActivity(new Intent(this, LoginActivity.class));
         }
     }
+
+    // Initiating Menu XML file (main1.xml)
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        inflater = getMenuInflater();
+        inflater.inflate(R.menu.main, menu);
+        return true;
+    }
+    /**
+     * Event Handling for Individual menu item selected
+     * Identify single menu item by it's id
+     * */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.option0: {
+                    Intent intent = new Intent(this, MainActivity.class);
+                    startActivity(intent);
+                    return true;
+            }
+            case R.id.option1: {
+                startActivity(new Intent(this, LoginActivity.class));
+               return true;
+            }
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
 }
