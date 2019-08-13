@@ -28,7 +28,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private EditText editTextEmail;
     private EditText editTextPassword;
     private TextView textViewSignUp;
-    private ProgressBar progressBar;
+    private ProgressBar pkLoadingIndicator;
     private FirebaseAuth firebaseAuth;
     private MenuInflater inflater;
 
@@ -38,6 +38,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         setContentView(R.layout.activity_login);
         LinearLayout l = findViewById(R.id.linearLoginActivity);
         l.setBackgroundColor(0x00000000);
+        pkLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator1);
 
         firebaseAuth = FirebaseAuth.getInstance();
         if(firebaseAuth.getCurrentUser() != null){ // user already logged in
@@ -82,6 +83,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if(task.isSuccessful()){
                             // start the profile activity
+                            pkLoadingIndicator.setVisibility(View.INVISIBLE);
                             finish();
                             startActivity(new Intent(getApplicationContext(), ProfileActivity.class));
                         }
@@ -92,6 +94,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     @Override
     public void onClick(View view) {
         if(view == buttonSignIn){
+            pkLoadingIndicator.setVisibility(View.VISIBLE);
             userLogin();
         }
         if(view == textViewSignUp){

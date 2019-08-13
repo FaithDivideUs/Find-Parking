@@ -11,4 +11,5 @@
     <string name="arxikh">Αρχική</string>
     <string name="syndesi">Σύνδεση</string>
     <string name="aposundesi">Αποσύνδεση</string>
+    <string name="no_parking">Δε βρέθηκαν parking στην περιοχή</string>
 </resources>

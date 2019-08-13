@@ -11,6 +11,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,9 +24,8 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
 
     private FirebaseAuth firebaseAuth;
     private TextView textViewUserEmail;
-    private Button buttonLogout;
     MenuInflater inflater;
-
+    private ProgressBar pkLoadingIndicator2;
     private DatabaseReference databaseReference;
     private EditText editTextName, editTextAddress;
     private Button buttonSave;
@@ -41,19 +41,17 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
             startActivity(new Intent(this, LoginActivity.class));
 
         }
-
-        databaseReference = FirebaseDatabase.getInstance().getReference();
+        // TODO USER CAN BE UPDATE HIS PERSONAL INFORMATIONS
+        databaseReference = FirebaseDatabase.getInstance().getReference("persons"); // reference to specific branch of JSON tree
         editTextAddress = (EditText) findViewById(R.id.editTextAddress);
         editTextName = (EditText) findViewById(R.id.editTextName);
         buttonSave = (Button) findViewById(R.id.buttonSave);
-
+        pkLoadingIndicator2 = (ProgressBar) findViewById(R.id.pb_loading_indicator2);
         FirebaseUser user = firebaseAuth.getCurrentUser();
 
         textViewUserEmail = (TextView) findViewById(R.id.textViewUserEmail);
         textViewUserEmail.setText("Welcome\n" +user.getEmail()+ "\nplease apply the form to make you a profile");
-        buttonLogout = (Button) findViewById(R.id.buttonLogout);
         // adding listener to button
-        buttonLogout.setOnClickListener(this);
         buttonSave.setOnClickListener(this);
     }
 
@@ -68,15 +66,14 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
             databaseReference.child(user.getUid()).setValue(userInfo);
             Log.i("userinfo: " , userInfo.toString());
         }
+        pkLoadingIndicator2.setVisibility(View.INVISIBLE);
         Toast.makeText(this,"Information saved..", Toast.LENGTH_LONG).show();
     }
 
     @Override
     public void onClick(View view) {
-        if(view == buttonLogout){
-            // remain in the same page
-        }
         if(view == buttonSave){
+            pkLoadingIndicator2.setVisibility(View.VISIBLE);
             saveUserInformation();
         }
     }

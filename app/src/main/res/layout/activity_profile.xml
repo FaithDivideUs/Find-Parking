@@ -43,12 +43,12 @@
             android:hint="Save Info"
             android:textStyle="bold"/>
 
-        <Button
-            android:id="@+id/buttonLogout"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Logout"
-            android:layout_gravity="center_horizontal"/>
+        <ProgressBar
+            android:id="@+id/pb_loading_indicator2"
+            android:layout_height="42dp"
+            android:layout_width="42dp"
+            android:layout_gravity="center"
+            android:visibility="invisible" />
 
     </LinearLayout>
 </RelativeLayout>

@@ -3,11 +3,9 @@ package com.example.findparking;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -16,7 +14,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -45,12 +42,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
         LinearLayout l = findViewById(R.id.linearActivityMain);
         l.setBackgroundColor(0x00000000);
+        progressBar = (ProgressBar) findViewById(R.id.pb_loading_indicator);
 
         firebaseAuth = FirebaseAuth.getInstance();
         DatabaseReference postRef = FirebaseDatabase.getInstance().getReference();
         if(firebaseAuth.getCurrentUser() != null){ // user already logged in
+            progressBar.setVisibility(View.VISIBLE);
             // if profile is ready goto SearchActivity
-            DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference();
+            DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference("persons");
             rootRef.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot snapshot) {
@@ -71,7 +70,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         }
 
-        progressBar = new ProgressBar(this);
         buttonRegister = (Button) findViewById(R.id.button1);
         editTextEmail = (EditText) findViewById(R.id.editTextEmail);
         editTextPassword = (EditText) findViewById(R.id.editTextPassword);
@@ -106,6 +104,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     public void onComplete(@NonNull Task<AuthResult> task) {
                             if(task.isSuccessful()){
                                 // user is succefully registered and logged in
+                                progressBar.setVisibility(View.INVISIBLE);
                                 finish();
                                 startActivity(new Intent(getApplicationContext(), ProfileActivity.class));
                             }else{
@@ -119,6 +118,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View view) {
         if(view == buttonRegister){
+            progressBar.setVisibility(View.VISIBLE);
             registerUser();
         }
         if(view == buttonSignIn){
