@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -21,6 +22,13 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.ArrayList;
 
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -31,6 +39,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private ProgressBar pkLoadingIndicator;
     private FirebaseAuth firebaseAuth;
     private MenuInflater inflater;
+    private ArrayList<String> areaItems;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,12 +48,13 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         LinearLayout l = findViewById(R.id.linearLoginActivity);
         l.setBackgroundColor(0x00000000);
         pkLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator1);
+        areaItems = new ArrayList<String>();
 
         firebaseAuth = FirebaseAuth.getInstance();
         if(firebaseAuth.getCurrentUser() != null){ // user already logged in
             // profile activity
             finish();
-            startActivity(new Intent(getApplicationContext(), ProfileActivity.class));
+            startActivity(new Intent(getApplicationContext(), SearchActivity.class));
 
         }
 
@@ -75,7 +85,23 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             return;
         }
         // if validations are ok
-       // progressBar.isShown();
+
+        DatabaseReference postRef = FirebaseDatabase.getInstance().getReference();
+
+        postRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                for(DataSnapshot ds : snapshot.child("parking").getChildren()) {
+                    //Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
+                    String area = ds.getKey();
+                    areaItems.add(area);
+                }
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                //todo
+            }
+        });
 
         firebaseAuth.signInWithEmailAndPassword(email,password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -85,7 +111,11 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                             // start the profile activity
                             pkLoadingIndicator.setVisibility(View.INVISIBLE);
                             finish();
-                            startActivity(new Intent(getApplicationContext(), ProfileActivity.class));
+                            Intent intent = new Intent(getApplicationContext(), SearchActivity.class);
+                            intent.putExtra("areaItems", areaItems);
+                            startActivity(intent);
+                        } else{
+                            Toast.makeText(LoginActivity.this,"Could not logged in, please try again", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });

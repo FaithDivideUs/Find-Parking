@@ -26,6 +26,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
+
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
     private Button buttonRegister;
@@ -35,6 +37,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ProgressBar progressBar;
     private FirebaseAuth firebaseAuth;
     MenuInflater inflater;
+    private ArrayList<String> areaItems;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,22 +46,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         LinearLayout l = findViewById(R.id.linearActivityMain);
         l.setBackgroundColor(0x00000000);
         progressBar = (ProgressBar) findViewById(R.id.pb_loading_indicator);
+        areaItems = new ArrayList<String>();
 
         firebaseAuth = FirebaseAuth.getInstance();
         DatabaseReference postRef = FirebaseDatabase.getInstance().getReference();
+
         if(firebaseAuth.getCurrentUser() != null){ // user already logged in
             progressBar.setVisibility(View.VISIBLE);
             // if profile is ready goto SearchActivity
-            DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference("persons");
-            rootRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            postRef.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot snapshot) {
-                    if (snapshot.hasChild(firebaseAuth.getCurrentUser().getUid())) {
+                    for(DataSnapshot ds : snapshot.child("parking").getChildren()) {
+                        //Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
+                        String area = ds.getKey();
+                        areaItems.add(area);
+                    }
+                    if (snapshot.child("persons").hasChild(firebaseAuth.getCurrentUser().getUid())) {
                         finish();
-                        startActivity(new Intent(getApplicationContext(), SearchActivity.class));
+                        Intent intent = new Intent(getApplicationContext(), SearchActivity.class);
+                        intent.putExtra("areaItems", areaItems);
+                        startActivity(intent);
                     }else{ // otherwise goto ProfileActivity to apply the form
                         finish();
-                        startActivity(new Intent(getApplicationContext(), ProfileActivity.class));
+                        Intent intent = new Intent(getApplicationContext(), ProfileActivity.class);
+                        intent.putExtra("areaItems", areaItems);
+                        startActivity(intent);
                     }
 
                 }
@@ -97,16 +110,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         // if validations are ok
 
+        DatabaseReference postRef = FirebaseDatabase.getInstance().getReference();
+
+            postRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot snapshot) {
+                    for(DataSnapshot ds : snapshot.child("parking").getChildren()) {
+                        //Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
+                        String area = ds.getKey();
+                        areaItems.add(area);
+                    }
+                }
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+                    //todo
+                }
+            });
 
         firebaseAuth.createUserWithEmailAndPassword(email,password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                             if(task.isSuccessful()){
-                                // user is succefully registered and logged in
+                                // user is successfully registered and logged in
                                 progressBar.setVisibility(View.INVISIBLE);
                                 finish();
-                                startActivity(new Intent(getApplicationContext(), ProfileActivity.class));
+                                Intent intent = new Intent(getApplicationContext(), ProfileActivity.class);
+                                intent.putExtra("areaItems", areaItems);
+                                startActivity(intent);
+
                             }else{
                                 Toast.makeText(MainActivity.this,"Could not register, please try again", Toast.LENGTH_SHORT).show();
 

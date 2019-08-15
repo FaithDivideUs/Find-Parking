@@ -12,9 +12,10 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ProgressBar;
-import android.widget.TextView;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -26,42 +27,43 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.List;
 
-public class SearchActivity extends AppCompatActivity implements AreaAdapter.AreaAdapterOnClickHandler,View.OnClickListener {
+public class SearchAllAreas extends AppCompatActivity implements AreaAdapter.AreaAdapterOnClickHandler{
 
     private MenuInflater inflater;
+    private ArrayList<String> array_list = null;
     private RecyclerView mRecyclerView;
+    private Spinner spinner;
     private AreaAdapter mAreaAdapter;
-    private ProgressBar mLoadingIndicator;
     private FirebaseAuth firebaseAuth;
     private DatabaseReference databaseReference;
-    private int counter=0,counter1=0,count=-1;
-    private TextView textview1,textview2;
-    private Button button_to_otherareas;
-    private String address,destination_address;
-    private String name;
-    private ArrayList<String> array_list;
-    private String noparking="not available parking!";
+    private   List<String> areas_list = new ArrayList<String>();
+    private ProgressBar bar;
+    private int counter=0,count=-1,position_spinner;
     private String[] data;
     private String result;
+    private String noparking="not available parking!";
+    private String destination_address;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_search);
-
-        mLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator3);
-        mLoadingIndicator.setVisibility(View.VISIBLE);
+        setContentView(R.layout.activity_search_all_areas);
+        bar = (ProgressBar) findViewById(R.id.pb_loading_indicator4);
+        bar.setVisibility(View.VISIBLE); // enable progress bar
         firebaseAuth = FirebaseAuth.getInstance();
 
-        button_to_otherareas = (Button) findViewById(R.id.button_findArea);
         Intent intentMain = getIntent();
         if(intentMain.hasExtra("areaItems")){ // take areas from other activities
             array_list = intentMain.getStringArrayListExtra("areaItems");
+            if (array_list != null) {
+                areas_list.addAll(array_list);
+            }
         }
 
         /** THIS IS FOR  RecyclerView **/
-        mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view2);
         /**
          * LinearLayoutManager can support HORIZONTAL or VERTICAL orientations. The reverse layout
          * parameter is useful mostly for HORIZONTAL layouts that should reverse for right to left
@@ -77,56 +79,54 @@ public class SearchActivity extends AppCompatActivity implements AreaAdapter.Are
         /* Setting the adapter attaches it to the RecyclerView in our layout. */
         mRecyclerView.setAdapter(mAreaAdapter);
 
-        firebaseAuth = firebaseAuth.getInstance();
-        databaseReference = FirebaseDatabase.getInstance().getReference();
-        DatabaseReference orderDetailRef = databaseReference.child("persons").child(firebaseAuth.getCurrentUser().getUid());
-        ValueEventListener eventListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot ds : dataSnapshot.getChildren()) {
-                    if(counter==0){
-                        address = (String) ds.getValue();
-                        counter++;
-                    }else{
-                        name = (String) ds.getValue();
-                        fill();
-                    }
-                }
-            }
+        // initialize spinner and add data
+        spinner = (Spinner)findViewById(R.id.mySpinner);
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, areas_list);
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(spinnerAdapter);
+        spinnerAdapter.notifyDataSetChanged();
+        spinner.setSelection(0,false);
+        /** --------only the first time-------- */
+        receive_parkingdata(0);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
+        {
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
+            {
+                bar.setVisibility(View.VISIBLE); // enable progress bar
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.e( "onCancelled", String.valueOf(databaseError.toException()));
+                position_spinner=position;
+                receive_parkingdata(position);
+            } // to close the onItemSelected
+            public void onNothingSelected(AdapterView<?> parent)
+            {
+                // nothing to do here
             }
-        };
-        orderDetailRef.addListenerForSingleValueEvent(eventListener);
+        });
 
-        button_to_otherareas.setOnClickListener(this);
+
 
     }
 
-    private void fill(){
-        textview1 = (TextView) findViewById(R.id.textView3);
-        textview2 = (TextView) findViewById(R.id.textView4);
-        textview1.setText("Καλώς όρισες " + name + "\nΑυτά είναι τα προτεινόμενα\nparking για σένα");
-        textview2.setText(address);
 
-        DatabaseReference orderDetailRef = databaseReference.child("parking").child(address);
+    private void receive_parkingdata(Integer pos){
+
+        databaseReference = FirebaseDatabase.getInstance().getReference();
+        DatabaseReference orderDetailRef = databaseReference.child("parking").child(array_list.get(pos));
+        // todo check what happens if there is not available parking in the area
         ValueEventListener eventListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 count = (int) dataSnapshot.getChildrenCount(); // this is the size of list
                 data = new String[count];
-
                 for(DataSnapshot ds : dataSnapshot.getChildren()) {
                     result = (String) ds.getKey() + "~~yHashUi3~~" + ds.getValue(); // store infos of each parking
 
-                    data[counter1] = result;
-                    counter1++;
+                    data[counter] = result;
+                    counter++;
                 }
                 showDataView();
                 mAreaAdapter.setAreaData(data);
-                mLoadingIndicator.setVisibility(View.INVISIBLE);
+                bar.setVisibility(View.INVISIBLE); // disable progress bar
             }
 
             @Override
@@ -135,61 +135,14 @@ public class SearchActivity extends AppCompatActivity implements AreaAdapter.Are
             }
         };
         orderDetailRef.addListenerForSingleValueEvent(eventListener);
-        counter1=0;
-        // todo check what happens if there is not available parking in the area
-    }
-
-    /**
-     * This method will make the View for the article data visible and
-     * hide the error message.
-     */
-    private void showDataView() {
-        /* Then, make sure the parking data is visible */
-        mRecyclerView.setVisibility(View.VISIBLE);
-    }
-    /**
-     * This method will make the error message visible and hide the parking area View.
-     */
-    private void showErrorMessage() {
-        /* First, hide the currently visible data */
-        mRecyclerView.setVisibility(View.INVISIBLE);
-    }
-
-    @Override
-    public void onClick(String specific) {
-
-        if(specific.equals(noparking)){ // if field is empty
-            Toast.makeText(this, specific, Toast.LENGTH_SHORT)
-                    .show();
-        } else {
-            String[] bits = specific.split("~~yHashUi3~~");
-            specific = bits[1]; // we only need the address
-            specific.replaceAll(" ","+");
-        }
-
-        destination_address = specific + ",+" + address;
-        String map = "http://maps.google.co.in/maps?q=" + destination_address; // this url provides us the view of parking via google maps
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(map));
-        getApplicationContext().startActivity(intent);
-
-    }
-
-    @Override
-    public void onClick(View view) { // about button
-        if(view == button_to_otherareas){
-            finish();
-            Intent intent = new Intent(getApplicationContext(), SearchAllAreas.class);
-            intent.putExtra("areaItems", array_list);
-            startActivity(intent);
-        }
-
+        counter=0;
     }
 
     // Initiating Menu XML file (main1.xml)
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         inflater = getMenuInflater();
-        inflater.inflate(R.menu.update_profile, menu);
+        inflater.inflate(R.menu.menu_lastactivity, menu);
         return true;
     }
     /**
@@ -216,6 +169,13 @@ public class SearchActivity extends AppCompatActivity implements AreaAdapter.Are
                 return true;
             }
             case R.id.option2: {
+                finish();
+                Intent intent = new Intent(getApplicationContext(), SearchActivity.class);
+                intent.putExtra("areaItems", array_list);
+                startActivity(intent);
+                return true;
+            }
+            case R.id.option3: {
                 firebaseAuth.signOut();
                 finish();
                 startActivity(new Intent(this, LoginActivity.class));
@@ -225,4 +185,41 @@ public class SearchActivity extends AppCompatActivity implements AreaAdapter.Are
                 return super.onOptionsItemSelected(item);
         }
     }
+
+
+    /**
+     * This method will make the View for the article data visible and
+     * hide the error message.
+     */
+    private void showDataView() {
+        /* Then, make sure the parking data is visible */
+        mRecyclerView.setVisibility(View.VISIBLE);
+    }
+    /**
+     * This method will make the error message visible and hide the article View.
+     */
+    private void showErrorMessage() {
+        /* First, hide the currently visible data */
+        mRecyclerView.setVisibility(View.INVISIBLE);
+    }
+
+    @Override
+    public void onClick(String specific) {
+
+
+        if(specific.equals(noparking)){ // if field is empty
+            Toast.makeText(this, specific, Toast.LENGTH_SHORT)
+                    .show();
+        } else {
+            String[] bits = specific.split("~~yHashUi3~~");
+            specific = bits[1]; // we only need the address
+            specific.replaceAll(" ","+");
+        }
+        destination_address = specific + ",+" + array_list.get(position_spinner);
+        String map = "http://maps.google.co.in/maps?q=" + destination_address;  // this url provides us the view of parking via google maps
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(map));
+        getApplicationContext().startActivity(intent);
+    }
+
+
 }

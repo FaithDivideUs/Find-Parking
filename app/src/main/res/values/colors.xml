@@ -11,4 +11,5 @@
     <color name="text_color_primary">#000000</color>
     <color name="text_color_secondary">#000000</color>
     <color name="secondary_text_material_dark">#ffffff</color>
+    <color name="SoftBlue">#D6E9F7</color>
 </resources>

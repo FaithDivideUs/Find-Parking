@@ -12,4 +12,7 @@
     <string name="syndesi">Σύνδεση</string>
     <string name="aposundesi">Αποσύνδεση</string>
     <string name="no_parking">Δε βρέθηκαν parking στην περιοχή</string>
+    <string name="find_areas">Βρες parking σε άλλες περιοχές</string>
+    <string name="update_profle">Ενημέρωση Προφίλ</string>
+    <string name="parking_nearme">Parking στην περιοχή μου</string>
 </resources>
