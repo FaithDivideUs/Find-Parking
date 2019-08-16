@@ -76,12 +76,14 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             // email is empty
             Toast.makeText(this,"Please enter email", Toast.LENGTH_SHORT).show();
             // stopping the function execution further
+            pkLoadingIndicator.setVisibility(View.INVISIBLE);
             return;
         }
         if(TextUtils.isEmpty(password)){
             // password is empty
             Toast.makeText(this,"Please enter password", Toast.LENGTH_SHORT).show();
             // stopping the function execution further
+            pkLoadingIndicator.setVisibility(View.INVISIBLE);
             return;
         }
         // if validations are ok

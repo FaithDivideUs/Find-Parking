@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -16,6 +17,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -27,6 +29,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 public class SearchAllAreas extends AppCompatActivity implements AreaAdapter.AreaAdapterOnClickHandler{
@@ -40,11 +43,15 @@ public class SearchAllAreas extends AppCompatActivity implements AreaAdapter.Are
     private DatabaseReference databaseReference;
     private   List<String> areas_list = new ArrayList<String>();
     private ProgressBar bar;
-    private int counter=0,count=-1,position_spinner;
+    private int counter=0,count=-1,position_spinner=0;
     private String[] data;
     private String result;
     private String noparking="not available parking!";
     private String destination_address;
+    private Integer time;
+    private String day,month;
+    private String currentTime;
+    private Integer probability=-100;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +60,14 @@ public class SearchAllAreas extends AppCompatActivity implements AreaAdapter.Are
         bar = (ProgressBar) findViewById(R.id.pb_loading_indicator4);
         bar.setVisibility(View.VISIBLE); // enable progress bar
         firebaseAuth = FirebaseAuth.getInstance();
+
+        // initialization of arrays
+        currentTime = String.valueOf(Calendar.getInstance().getTime());
+        currentTime = currentTime.replace(" ","/");
+        String[] split = currentTime.split("/");
+        day = split[0];
+        month = split[1];
+        time = Integer.valueOf(split[3].substring(0,2));
 
         Intent intentMain = getIntent();
         if(intentMain.hasExtra("areaItems")){ // take areas from other activities
@@ -111,6 +126,20 @@ public class SearchAllAreas extends AppCompatActivity implements AreaAdapter.Are
     private void receive_parkingdata(Integer pos){
 
         databaseReference = FirebaseDatabase.getInstance().getReference();
+        // start the remote call
+        databaseReference.addListenerForSingleValueEvent(new ValueEventListener()
+        {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                new FindProbability().execute(dataSnapshot);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
         DatabaseReference orderDetailRef = databaseReference.child("parking").child(array_list.get(pos));
         // todo check what happens if there is not available parking in the area
         ValueEventListener eventListener = new ValueEventListener() {
@@ -136,6 +165,55 @@ public class SearchAllAreas extends AppCompatActivity implements AreaAdapter.Are
         };
         orderDetailRef.addListenerForSingleValueEvent(eventListener);
         counter=0;
+    }
+
+
+    private class FindProbability extends AsyncTask<DataSnapshot, Void, Integer> {
+
+        public FindProbability() {
+            // TODO Auto-generated constructor stub
+        }
+
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+        }
+
+        @Override
+        protected Integer doInBackground(DataSnapshot... dataSnapshots) {
+
+            probability = Integer.parseInt(String.valueOf(dataSnapshots[0].child("areas").child(array_list.get(position_spinner)).getValue()));
+            probability = probability + Integer.parseInt(String.valueOf(dataSnapshots[0].child("months").child(month).getValue()));
+            probability = probability + Integer.parseInt(String.valueOf(dataSnapshots[0].child("days").child(day).getValue()));
+            return probability;
+        }
+
+        @Override
+        protected void onPostExecute(Integer result) {
+
+            if (result != -100) {
+                makeProbability(result);
+            } else {
+                Toast.makeText(getApplication(), getResources().getString(R.string.error_remote_call),Toast.LENGTH_SHORT)
+                        .show();
+            }
+        }
+
+    }
+
+    private void makeProbability(Integer prob){
+        // this is for probability at nights in popular places
+        Double precision = Double.valueOf(prob);
+        if((time>20 && time<23) && (array_list.get(position_spinner).equals("Εξάρχεια") || array_list.get(position_spinner).equals("Μαρούσι") || array_list.get(position_spinner).equals("Μεταξουγείο") || array_list.get(position_spinner).equals("Μοναστηράκι") || array_list.get(position_spinner).equals("Σύταγμα"))){
+            precision = precision/2;
+        } else if(time>00 && time <06) {
+            precision = precision*2;
+        }
+        if(precision>30) // 30 is max value for probability
+            precision=30.0;
+        precision = 100*precision/30; // as percentage
+        TextView tv = findViewById(R.id.textProbability2);
+        tv.setText(precision.intValue() + "%");
     }
 
     // Initiating Menu XML file (main1.xml)
@@ -185,7 +263,6 @@ public class SearchAllAreas extends AppCompatActivity implements AreaAdapter.Are
                 return super.onOptionsItemSelected(item);
         }
     }
-
 
     /**
      * This method will make the View for the article data visible and

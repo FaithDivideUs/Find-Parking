@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -26,6 +27,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+
 
 public class SearchActivity extends AppCompatActivity implements AreaAdapter.AreaAdapterOnClickHandler,View.OnClickListener {
 
@@ -44,6 +47,10 @@ public class SearchActivity extends AppCompatActivity implements AreaAdapter.Are
     private String noparking="not available parking!";
     private String[] data;
     private String result;
+    private Integer time;
+    private String day,month;
+    private String currentTime;
+    private Integer probability=-100;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +60,13 @@ public class SearchActivity extends AppCompatActivity implements AreaAdapter.Are
         mLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator3);
         mLoadingIndicator.setVisibility(View.VISIBLE);
         firebaseAuth = FirebaseAuth.getInstance();
+        // initialization of arrays
+        currentTime = String.valueOf(Calendar.getInstance().getTime());
+        currentTime = currentTime.replace(" ","/");
+        String[] split = currentTime.split("/");
+        day = split[0];
+        month = split[1];
+        time = Integer.valueOf(split[3].substring(0,2));
 
         button_to_otherareas = (Button) findViewById(R.id.button_findArea);
         Intent intentMain = getIntent();
@@ -79,6 +93,21 @@ public class SearchActivity extends AppCompatActivity implements AreaAdapter.Are
 
         firebaseAuth = firebaseAuth.getInstance();
         databaseReference = FirebaseDatabase.getInstance().getReference();
+        databaseReference.addListenerForSingleValueEvent(new ValueEventListener()
+        {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                new FindProbability().execute(dataSnapshot);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+
+
         DatabaseReference orderDetailRef = databaseReference.child("persons").child(firebaseAuth.getCurrentUser().getUid());
         ValueEventListener eventListener = new ValueEventListener() {
             @Override
@@ -137,6 +166,56 @@ public class SearchActivity extends AppCompatActivity implements AreaAdapter.Are
         orderDetailRef.addListenerForSingleValueEvent(eventListener);
         counter1=0;
         // todo check what happens if there is not available parking in the area
+    }
+
+    private class FindProbability extends AsyncTask<DataSnapshot, Void, Integer> {
+
+        public FindProbability() {
+            // TODO Auto-generated constructor stub
+        }
+
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+        }
+
+        @Override
+        protected Integer doInBackground(DataSnapshot... dataSnapshots) {
+
+            probability = Integer.parseInt(String.valueOf(dataSnapshots[0].child("areas").child(address).getValue()));
+            probability = probability + Integer.parseInt(String.valueOf(dataSnapshots[0].child("months").child(month).getValue()));
+            probability = probability + Integer.parseInt(String.valueOf(dataSnapshots[0].child("days").child(day).getValue()));
+
+            return probability;
+        }
+
+        @Override
+        protected void onPostExecute(Integer result) {
+
+            if (result != -100) {
+               makeProbability(result);
+            } else {
+                Toast.makeText(getApplication(), getResources().getString(R.string.error_remote_call),Toast.LENGTH_SHORT)
+                        .show();
+            }
+        }
+
+    }
+
+
+    private void makeProbability(Integer prob){
+        // this is for probability at nights in popular places
+        Double precision = Double.valueOf(prob);
+        if((time>20 && time<23) && (address.equals("Εξάρχεια") || address.equals("Μαρούσι") || address.equals("Μεταξουγείο") || address.equals("Μοναστηράκι") || address.equals("Σύταγμα"))){
+            precision = precision/2;
+        } else if(time>00 && time <06) {
+            precision = precision*2;
+        }
+        if(precision>30) // 30 is max value for probability
+            precision=30.0;
+        precision = 100*precision/30; // as percentage
+        TextView tv = findViewById(R.id.textProbability);
+        tv.setText(precision.intValue() + "%");
     }
 
     /**

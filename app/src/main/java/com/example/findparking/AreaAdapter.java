@@ -82,7 +82,6 @@ public class AreaAdapter extends  RecyclerView.Adapter<AreaAdapter.AreaAdapterVi
     @Override
     public void onBindViewHolder(@NonNull AreaAdapterViewHolder areaAdapterViewHolder, int position) {
         String specific = mData[position];
-        Log.i("data: " ,specific);
         if(specific.equals(attention)){ // if specific field is empty.
 
             areaAdapterViewHolder.mTextView3.setVisibility(View.VISIBLE);

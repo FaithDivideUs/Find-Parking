@@ -61,4 +61,12 @@
         android:text="Πιθανότητα εύρεσης ελεύθερης θέσης parking στο δρόμο:"
         android:textAppearance="?android:attr/textAppearanceMedium"/>
 
+    <TextView
+        android:id="@+id/textProbability"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="20dp"
+        android:textAppearance="?android:attr/textAppearanceLarge"/>
+
 </LinearLayout>

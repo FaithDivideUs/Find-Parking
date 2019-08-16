@@ -15,4 +15,5 @@
     <string name="find_areas">Βρες parking σε άλλες περιοχές</string>
     <string name="update_profle">Ενημέρωση Προφίλ</string>
     <string name="parking_nearme">Parking στην περιοχή μου</string>
+    <string name="error_remote_call">There was an error on remote call</string>
 </resources>
